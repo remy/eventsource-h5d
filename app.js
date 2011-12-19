@@ -9,7 +9,7 @@ var fs = require('fs'),
 setTimeout(function uptime() {
   var child = exec('uptime', function (err, stdout, stderr) {
     if (!err) {
-      var loadraw = stdout.trim().split(' '),
+      var loadraw = stdout.trim().replace(/,/g, '').split(/\s+/),
           load = {
             15: loadraw.pop(),
             5: loadraw.pop(),
