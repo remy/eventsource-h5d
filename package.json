@@ -1,0 +1,14 @@
+{
+  "author": "Remy Sharp",
+  "name": "eventsource-h5d",
+  "description": "eventsource-demo",
+  "version": "0.0.0",
+  "private": true,
+  "main": "app.js",
+  "engines": {
+    "node": "~0.6.3"
+  },
+  "dependencies": {
+    "connect": ">= 0.0.1"
+  }
+}

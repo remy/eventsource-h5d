@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Server-Sent Events: server monitor</title>
+  <style>
+    body { font-family: monospace; font-size: 18px; margin: 0; }
+    #connStatus { background: #c00; color: #fff; font-weight: bold; }
+    #connStatus.open { background: #0c0; }
+    p { padding: 10px 20px; margin: 0; }
+    canvas { margin: 10px 20px; border-bottom: 1px solid #ccc; border-top: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <p id="connStatus">Waiting to connect to server...</p>
+  <p>Total connected clients: <span id="connections">0</span></p>
+  <p>Last connected browser: <span id="useragentHistory">waiting...</span></p>
+  <p>Load: 1 min: <span id="l1">0</span>, 5 min: <span id="l5">0</span>, 15 min: <span id="l15">0</span></p>
+  <canvas id="spark"></canvas>
+  <script src="sse.js"></script>
+</body>
+</html>
