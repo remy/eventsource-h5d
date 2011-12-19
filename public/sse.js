@@ -1,7 +1,9 @@
+(function () { 
 var connStatus = document.getElementById('connStatus'),
     connections = document.getElementById('connections'),
-    useragentHistory = document.getElementById('useragentHistory'),
-    load = { 1: document.getElementById('l1'), 5: document.getElementById('l5'), 15: document.getElementById('l15') };
+    requests = document.getElementById('requests'),
+    load = { 1: document.getElementById('l1'), 5: document.getElementById('l5'), 15: document.getElementById('l15') },
+    hasCanvas = !!document.createElement('canvas').getContext;
 
 function connectionOpen(open) {
   connStatus.className = open ? 'open' : '';
@@ -12,8 +14,8 @@ function updateConnections(event) {
   connections.innerHTML = JSON.parse(event.data);
 }
 
-function newConnection(event) {
-  useragentHistory.innerHTML = JSON.parse(event.data);
+function updateRequests(event) {
+  requests.innerHTML = JSON.parse(event.data);
 }
 
 var lastL1 = null,
@@ -25,38 +27,47 @@ function updateUptime(event) {
     load[key].innerHTML = loadData[key];
   }
 
-  // normalise
-  var l1 = (loadData[1] * 100 | 0) + 0.5;
+  if (hasCanvas) {
+    // normalise
+    var l1 = (loadData[1] * 100 | 0) + 0.5;
 
-  history.unshift(l1);
-  if (history.length > 400) {
-    history.splice(400, 400 - history.length);
+    history.unshift(l1);
+    if (history.length > 400) {
+      history.splice(400, 400 - history.length);
+    }
+
+    var max = Math.max.apply(Math, history) * 1.25;
+
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.save();
+    ctx.fillStyle = '#000';
+    ctx.fillText(loadData[1], 0, 50 - (history[0]/max * 50));
+    ctx.restore();
+    ctx.beginPath();
+    for (var i = 0; i < history.length; i++) {
+      ctx.lineTo(i + 20.5, 50 - (history[i-1]/max * 50) + 0.5);
+    }
+    ctx.stroke();
+    ctx.closePath();
   }
-
-  var max = Math.max.apply(Math, history) * 1.25;
-
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  ctx.save();
-  ctx.fillStyle = '#000';
-  ctx.fillText(loadData[1], 0, 50 - (history[0]/max * 50));
-  ctx.restore();
-  ctx.beginPath();
-  for (var i = 0; i < history.length; i++) {
-    ctx.lineTo(i + 20.5, 50 - (history[i-1]/max * 50) + 0.5);
-  }
-  ctx.stroke();
-  ctx.closePath();
 }
 
 var source = new EventSource('/stats');
 source.addEventListener('open', function () { connectionOpen(true); }, false);
 source.addEventListener('error', function () { connectionOpen(false); }, false);
 source.addEventListener('connections', updateConnections, false);
-source.addEventListener('connection', newConnection, false);
+source.addEventListener('requests', updateRequests, false);
 source.addEventListener('uptime', updateUptime, false);
+source.addEventListener('time', function (e) {  }, false);
 
-var ctx = document.getElementById('spark').getContext('2d');
-ctx.canvas.height = 50;
-ctx.canvas.width = 400;
-ctx.fillStyle = '#259BDA';
-ctx.strokeStyle = '#259BDA';
+var ctx;
+
+if (hasCanvas) {
+  ctx = document.getElementById('spark').getContext('2d');
+  ctx.canvas.height = 50;
+  ctx.canvas.width = 400;
+  ctx.fillStyle = '#259BDA';
+  ctx.strokeStyle = '#259BDA';
+}
+
+})();

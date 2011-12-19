@@ -14,9 +14,21 @@
 <body>
   <p id="connStatus">Waiting to connect to server...</p>
   <p>Total connected clients: <span id="connections">0</span></p>
-  <p>Last connected browser: <span id="useragentHistory">waiting...</span></p>
+  <p>Total requests: <span id="requests">0</span></p>
   <p>Load: 1 min: <span id="l1">0</span>, 5 min: <span id="l5">0</span>, 15 min: <span id="l15">0</span></p>
+  <ol id="debug"></ol>
   <canvas id="spark"></canvas>
+  <script>
+  if (!window.console) {
+    console = {
+      log: function (s) {
+        document.getElementById('debug').innerHTML += '<li><pre>' + s + '</pre></li>';
+      }
+    };
+  }
+  </script>
+  <script src="eventsource.js"></script>
+  <script src="json2.js"></script>
   <script src="sse.js"></script>
 </body>
 </html>
