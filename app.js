@@ -1,5 +1,6 @@
 var fs = require('fs'),
     connect = require('connect'),
+    http = require('http'),
     exec = require('child_process').exec,
     connections = [],
     history = [],
@@ -34,45 +35,43 @@ function removeConnection(res) {
   }
 }
 
-function router(app) {
-  app.get('/stats', function (req, res, next) {
-    if (req.headers.accept == 'text/event-stream') {
-      res.writeHead(200, {
-        'content-type': 'text/event-stream',
-        'cache-control': 'no-cache',
-        'connection': 'keep-alive'
-      });
+function router(req, res, next) {
+  if (req.headers.accept == 'text/event-stream') {
+    res.writeHead(200, {
+      'content-type': 'text/event-stream',
+      'cache-control': 'no-cache',
+      'connection': 'keep-alive'
+    });
 
-      // support the polyfill
-      if (req.headers['x-requested-with'] == 'XMLHttpRequest') {
-        res.xhr = null;
-      }
-
-
-      if (req.headers['last-event-id']) {
-        var id = parseInt(req.headers['last-event-id']);
-        for (var i = 0; i < history.length; i++) {
-          if (history[i].id >= id) {
-            sendSSE(res, history[i].id, history[i].event, history[i].message);
-          }
-        }
-      } else {
-        // resets the ID
-        res.write('id\n\n');
-      }
-
-      connections.push(res);
-      broadcast('connections', connections.length);
-
-      req.on('close', function () {
-        removeConnection(res);
-      });
-    } else {
-      // arbitrarily redirect them away from this url
-      res.writeHead(302, { location: "/index.html" });
-      res.end();
+    // support the polyfill
+    if (req.headers['x-requested-with'] == 'XMLHttpRequest') {
+      res.xhr = null;
     }
-  });
+
+
+    if (req.headers['last-event-id']) {
+      var id = parseInt(req.headers['last-event-id']);
+      for (var i = 0; i < history.length; i++) {
+        if (history[i].id >= id) {
+          sendSSE(res, history[i].id, history[i].event, history[i].message);
+        }
+      }
+    } else {
+      // resets the ID
+      res.write('id\n\n');
+    }
+
+    connections.push(res);
+    broadcast('connections', connections.length);
+
+    req.on('close', function () {
+      removeConnection(res);
+    });
+  } else {
+    // arbitrarily redirect them away from this url
+    res.writeHead(302, { location: "/index.html" });
+    res.end();
+  }
 }
 
 function broadcast(event, message) {
@@ -121,14 +120,15 @@ function sendSSE(res, id, event, message) {
   // console.log(data);
 }
 
-var app = connect.createServer().listen(process.env.PORT || 8000);
+var app = connect();
 
 app.use(function (req, res, next) {
   broadcast('requests', ++totalRequests);
   next();
 });
 app.use(connect.static(__dirname + '/public'));
-app.use(connect.router(router));
+app.use(router);
 
+http.createServer(app).listen(process.env.PORT || 8000);
 
-console.log("Listening on port %d", app.address().port);
+console.log("Listening");
